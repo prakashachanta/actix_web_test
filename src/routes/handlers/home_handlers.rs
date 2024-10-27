@@ -17,6 +17,10 @@ pub async fn get_all_user(db: &DatabaseConnection)-> Result<Vec<user::Model>, Db
     user::Entity::find().all(db).await
 }
 
+pub async fn get_user_by_id(db: &DatabaseConnection, id: i32)-> Result<Option<user::Model>, DbErr>{
+    user::Entity::find_by_id(id).one(db).await
+}
+
 #[get("/test")]
 pub async fn test()-> impl Responder{
     HttpResponse::Ok().body("Test!!!")
@@ -50,3 +54,17 @@ pub async fn get_users(application_state: web::Data<AppState>) -> impl Responder
         }
     }
 }
+
+#[get("/getUser/{id}")]
+pub async fn get_user(application_state: web::Data<AppState>, id: web::Path<i32>) -> impl Responder {
+    match get_user_by_id(&application_state.db, id.into_inner()).await {
+        Ok(Some(user)) => HttpResponse::Ok().json(user), // Return user as JSON
+        Ok(None) => HttpResponse::NotFound().finish(), // Return 404 if user not found
+        Err(err) => {
+            eprintln!("Database error: {:?}", err); // Log the error
+            HttpResponse::InternalServerError().finish() // Return 500 for database errors
+        }
+    }
+}
+
+

@@ -11,6 +11,7 @@ pub fn config(config: &mut web::ServiceConfig){
     )
     .service(web::scope("/user")
         .service(handlers::home_handlers::add_user)
-        .service(handlers::home_handlers::get_users));
+        .service(handlers::home_handlers::get_users)
+    .service(handlers::home_handlers::get_user));
         
 }
