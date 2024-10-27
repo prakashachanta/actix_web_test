@@ -30,7 +30,9 @@ Once your database is set up and connected, run the following command to apply m
 
 bash
 Copy code
+```
 cargo run --up
+```
 This will ensure all necessary tables and initial data structures are created in the database.
 
 Run the Application Locally:
@@ -39,20 +41,39 @@ To start the server, use:
 
 bash
 Copy code
+```
 cargo run
+```
+
 The API will be accessible at http://127.0.0.1:8080.
 
-Endpoints
-User Routes
-Method	Endpoint	Description
-GET	/getUsers	Fetch all users
-POST	/createUser	Create a new user
-Test Routes
-Method	Endpoint	Description
-GET	/test	Test API route
-GET	/hello/{name}	Personalized greeting route
-Database Setup
-Ensure you have a MySQL database configured with the name specified in your .env file. You can create a database by running the following MySQL command:
+# API Endpoints
+
+## User Routes
+
+| Method | Endpoint         | Description              |
+|--------|------------------|--------------------------|
+| GET    | /getUsers        | Fetch all users          |
+| POST   | /createUser      | Create a new user        |
+| GET    | /getUser/{id}    | Fetch User with that Id  |
+| DELETE | /deleteUser/{id} | Delete User with that Id |
+
+
+## Test Routes
+
+| Method | Endpoint       | Description                  |
+|--------|----------------|------------------------------|
+| GET    | /test          | Test API route               |
+| GET    | /hello/{name}  | Personalized greeting route  |
+
+
+## Database Setup
+
+Ensure you have a MySQL database configured with the name specified in your `.env` file. You can create a database by running the following MySQL command:
+
+```sql
+CREATE DATABASE your_database_name;
+
 
 sql
 Copy code
