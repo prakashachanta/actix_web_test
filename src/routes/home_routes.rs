@@ -7,11 +7,11 @@ pub fn config(config: &mut web::ServiceConfig){
     .service(web::scope("/home")
         .service(handlers::home_handlers::test)
        .service(handlers::home_handlers::greet)
-        // .service(handlers::home_handlers::find_all_users)
     )
     .service(web::scope("/user")
         .service(handlers::home_handlers::add_user)
         .service(handlers::home_handlers::get_users)
-    .service(handlers::home_handlers::get_user));
+        .service(handlers::home_handlers::get_user)
+        .service(handlers::home_handlers::delete_user));
         
 }

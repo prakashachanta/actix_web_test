@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{delete, get, post, web, HttpResponse, Responder};
 use entity::user;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, DbErr, EntityTrait, Set};
 
@@ -21,6 +21,15 @@ pub async fn get_user_by_id(db: &DatabaseConnection, id: i32)-> Result<Option<us
     user::Entity::find_by_id(id).one(db).await
 }
 
+pub async fn delete(db: &DatabaseConnection, id: i32)->Result<user::Model, DbErr> {
+    if let Ok(Some(user)) = user::Entity::find_by_id(id).one(db).await {
+        user::Entity::delete_by_id(id).exec(db).await.unwrap();
+        Ok(user)
+    } else {
+        Err(DbErr::RecordNotFound(format!("User with ID {} not found", id)))
+    }
+}
+
 #[get("/test")]
 pub async fn test()-> impl Responder{
     HttpResponse::Ok().body("Test!!!")
@@ -34,10 +43,7 @@ pub async fn greet(name: web::Path<String>) -> impl Responder {
 }
 
 #[post("/createUser")]
-async fn add_user(
-    req_body: web::Json<user::Model>,
-    application_state: web::Data<AppState>,
-) -> HttpResponse {
+async fn add_user(req_body: web::Json<user::Model>,application_state: web::Data<AppState>,) -> HttpResponse {
     let _ =
         create_user(&application_state.db, req_body.into_inner())
             .await;
@@ -57,14 +63,31 @@ pub async fn get_users(application_state: web::Data<AppState>) -> impl Responder
 
 #[get("/getUser/{id}")]
 pub async fn get_user(application_state: web::Data<AppState>, id: web::Path<i32>) -> impl Responder {
-    match get_user_by_id(&application_state.db, id.into_inner()).await {
+    let id = id.into_inner();
+    match get_user_by_id(&application_state.db, id).await {
         Ok(Some(user)) => HttpResponse::Ok().json(user), // Return user as JSON
         Ok(None) => HttpResponse::NotFound().finish(), // Return 404 if user not found
         Err(err) => {
             eprintln!("Database error: {:?}", err); // Log the error
-            HttpResponse::InternalServerError().finish() // Return 500 for database errors
+            let message = format!("User with Id {:?} not found", id);
+                    HttpResponse::InternalServerError().body(message) 
         }
     }
 }
 
+#[delete("/deleteUser/{id}")]
+pub async fn delete_user(application_state: web::Data<AppState>, id: web::Path<i32>)-> impl Responder{
+    match delete(&application_state.db, id.into_inner()).await{
+        Ok(user) => {
+            HttpResponse::Ok().json(user) // Return the deleted user as JSON
+        }
+        Err(err) => {
+            eprintln!("Error deleting user: {:?}", err); // Log the error
+            match err {
+                DbErr::RecordNotFound(_) => HttpResponse::NotFound().finish(), // 404 if user not found
+                _ => HttpResponse::InternalServerError().finish(), // Other errors
+            }
+        }
+    }
+}
 
